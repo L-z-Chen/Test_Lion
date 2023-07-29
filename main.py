@@ -192,7 +192,6 @@ def main_worker(gpu, ngpus_per_node, args):
     criterion = nn.CrossEntropyLoss().to(device)
 
     optimizer = Lion(model.parameters(), lr=3e-4, weight_decay=1.0, betas=(0.9, 0.99))
-    
     # Total number of training steps
     total_steps = 112680 # only for 90 epochs with batch size 1024
     warmup_steps = 10000
@@ -205,7 +204,6 @@ def main_worker(gpu, ngpus_per_node, args):
             # Cosine decay phase
             progress = (current_step - warmup_steps) / (total_steps - warmup_steps)
             return base_lr * 0.5 * (1 + math.cos(math.pi * progress))
-
     scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda step: warmup_cosine_decay(step, warmup_steps, total_steps, args.lr))
 
     # optionally resume from a checkpoint
@@ -290,7 +288,7 @@ def main_worker(gpu, ngpus_per_node, args):
         # evaluate on validation set
         acc1 = validate(val_loader, model, criterion, args)
         
-        scheduler.step()
+        # scheduler.step()
         
         # remember best acc@1 and save checkpoint
         is_best = acc1 > best_acc1
@@ -345,7 +343,7 @@ def train(train_loader, model, criterion, optimizer, epoch, device, args):
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-
+        scheduler.step()
         # measure elapsed time
         batch_time.update(time.time() - end)
         end = time.time()
